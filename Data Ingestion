@@ -65,7 +65,60 @@ employees_df = (
 # Show the data
 employees_df.show()
 
+SelfLearn : How to use secrets to avoid hard quoting of username and passwords.
 ========================================================================================================================================================================
+
+Using ABFC paths to connect to external data sources. In this case lets take onelake in microsoft fabric as example :
+
+1. Set Up Your Service Principal in Azure
+Go to Azure Portal → Microsoft Entra ID → App registrations.
+Create a new app registration (service principal).
+Note the Application (client) ID, Directory (tenant) ID, and create a client secret for this service principal.
+
+2. Enable Service Principal Access in Fabric
+In Microsoft Fabric Admin Portal, go to Tenant settings.
+For both Power BI APIs (under Developer settings) and OneLake settings, enable service principals for your organization.
+Go to your Fabric workspace containing the Lakehouse → Manage access.
+Add the service principal to your workspace and assign at least the Contributor role.
+
+3. Configure Required Info in Databricks
+You will need:
+tenant_id (Directory ID)
+client_id (Application ID)
+client_secret (Service Principal secret)
+The ABFS path to your Lakehouse (abfss://... as shown earlier)
+The storage account portion is typically onelake.dfs.fabric.microsoft.com for Fabric.
+
+4. Sample code
+
+# Service Principal Credentials
+tenant_id = "<Your-Tenant-ID>"
+client_id = "<Your-Client-ID>"
+client_secret = "<Your-Client-Secret>"
+storage_account = "onelake.dfs.fabric.microsoft.com"
+
+# Set Spark configs for OAuth using Service Principal
+spark.conf.set(f"fs.azure.account.auth.type.{storage_account}", "OAuth")
+spark.conf.set(f"fs.azure.account.oauth.provider.type.{storage_account}", "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider")
+spark.conf.set(f"fs.azure.account.oauth2.client.id.{storage_account}", client_id)
+spark.conf.set(f"fs.azure.account.oauth2.client.secret.{storage_account}", client_secret)
+spark.conf.set(f"fs.azure.account.oauth2.client.endpoint.{storage_account}", f"https://login.microsoftonline.com/{tenant_id}/oauth2/token")
+
+lakehouse_path = "abfss://<Workspace>@onelake.dfs.fabric.microsoft.com/<Lakehouse>.lakehouse/Files/employees.csv"
+# Read data
+df = spark.read.format("csv").option("header", "true").load(lakehouse_path)
+df.show()
+# Write data
+df.write.format("parquet").mode("overwrite").save("abfss://<Workspace>@onelake.dfs.fabric.microsoft.com/<Lakehouse>.lakehouse/Files/backup/")
+
+SelfLearn : It is always recomended to use service principle to connect to external services in production environment. Try using service principle.
+For ref : https://microsoft.github.io/TechExcel-Fabric-with-Databricks-for-Data-Analytics/
+
+=================================================================================================================================================================
+
+
+
+
 
 
 
