@@ -27,3 +27,45 @@ ODBC is less common for direct Databricks notebook usage but
 
 How to read data from a table in on prem sql server using databricks notebook?
 
+1. Ensure Network Connectivity
+Your Databricks cluster must have network access to your on-prem SQL Server.
+This usually requires setting up a VPN, ExpressRoute, or similar connection between your on-prem environment and the Databricks environment (on Azure/AWS) so your cluster can reach the SQL Server IP/hostname and port (typically 1433).
+
+2. Get the SQL Server JDBC Driver
+The JDBC driver for SQL Server (com.microsoft.sqlserver.jdbc.SQLServerDriver) must be available on your cluster.
+On Databricks, you can usually add this dependency via Maven, or by uploading the JAR to your cluster under Libraries.
+
+3. Sample code
+# Set parameters
+jdbc_hostname = "YOUR_SQLSERVER_HOST_OR_IP"
+jdbc_port = 1433
+database = "YOUR_DB_NAME"
+username = "YOUR_USERNAME"
+password = "YOUR_PASSWORD"
+table = "employees"  # Or use "schema.employees" if needed
+
+# JDBC URL
+jdbc_url = f"jdbc:sqlserver://{jdbc_hostname}:{jdbc_port};databaseName={database}"
+
+# JDBC driver class for SQL Server
+driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+
+# Read into DataFrame
+employees_df = (
+    spark.read
+    .format("jdbc")
+    .option("url", jdbc_url)
+    .option("dbtable", table)
+    .option("user", username)
+    .option("password", password)
+    .option("driver", driver)
+    .load()
+)
+
+# Show the data
+employees_df.show()
+
+========================================================================================================================================================================
+
+
+
