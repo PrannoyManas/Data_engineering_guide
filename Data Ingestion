@@ -1,0 +1,29 @@
+How to connect to on-prem sources from databricks ?
+You can use JDBC or ODBC connectors to connect to on-prem soruces
+
+What are they ?
+The JDBC connector in Databricks is a special software driver that enables applications, tools, and clients to connect with Databricks using the well-known Java Database Connectivity (JDBC) protocol. 
+JDBC is an industry-standard API that allows Java-based programs to access and interact with databases and big data platforms.
+in short the JDBC connector acts as a bridge between Databricks and any application or tool that supports JDBC, enabling smooth data access, SQL querying, and integration with Java-based frameworks and BI tools
+
+how does it work ?
+You configure your connection by providing details like the Databricks workspace/server hostname, HTTP path, authentication token, and any other required parameters.
+Tools or code using JDBC send queries and commands through this connector, which then communicates securely with the Databricks cluster or SQL Warehouse to process data.
+
+Which one to choose ?
+Use JDBC:
+If you are working within a Java-based environment (such as Databricks notebooks, which run on JVM).
+If you need cross-platform compatibility.
+If you want easier integration and less OS-specific configuration.
+JDBC drivers are typically the standard and most supported option for Databricks, and most database vendors provide JDBC drivers for integration.
+
+Use ODBC:
+If you need to connect through a tool, application, or client that does not support Java or requires native, platform-specific integration.
+If you’re working with a legacy system or BI tool that only supports ODBC.
+ODBC is less common for direct Databricks notebook usage but 
+
+
+====================================================================================================================================
+
+How to read data from a table in on prem sql server using databricks notebook?
+
