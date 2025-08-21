@@ -116,6 +116,65 @@ For ref : https://microsoft.github.io/TechExcel-Fabric-with-Databricks-for-Data-
 
 =================================================================================================================================================================
 
+Load files recursively from two different workspaces into a lakehouse using wildcards
+
+Imagine a scenario in which you are collaborating with two colleagues who have stored sales data in two separate lakehouses, each within a different workspace and under distinct names but same schema. 
+The data is saved in folders containing numerous parquet files. 
+One colleague saved the parquet files with names starting with "data-", while the other used Spark, which typically saves files with names beginning with "part-". 
+Your task is to read this data in a notebook for further analysis.
+
+//Sample Code
+paths = [
+    "abfss://<workspace1_id>@onelake.dfs.fabric.microsoft.com/<lakehouse2_id>/Files/<folder_name>/",
+    "abfss://<workspace2_id>@onelake.dfs.fabric.microsoft.com/<lakehouse2_id>/Files/<folder_name1>/<folder_name2>"
+]
+
+df = (spark.read
+      .option("pathGlobFilter", "{data*.parquet,part*.parquet}") # only files starting with data or part
+      .option("recursiveFileLookup", "true") #recursively load from nested sub folders
+      .parquet(*paths))
+
+//PathGlobeFilter
+
+pathGlobFilter is used to only include files with file names matching the pattern. The syntax follows org.apache.hadoop.fs.GlobFilter. It does not change the behavior of partition discovery.
+To load files with paths matching a given glob pattern while keeping the behavior of partition discovery, you can use:
+df = spark.read.load("examples/src/main/resources/dir1",
+                     format="parquet", pathGlobFilter="*.parquet")
+
+//Recursive File Lookup
+recursiveFileLookup is used to recursively load files and it disables partition inferring. Its default value is false. 
+If data source explicitly specifies the partitionSpec when recursiveFileLookup is true, exception will be thrown.
+To load all files recursively, you can use:
+recursive_loaded_df = spark.read.format("parquet")\
+    .option("recursiveFileLookup", "true")\
+    .load("examples/src/main/resources/dir1")
+
+//Ignore Missing Files
+Spark allows you to use the configuration spark.sql.files.ignoreMissingFiles or the data source option ignoreMissingFiles to ignore missing files while reading data from files. 
+Here, missing file really means the deleted file under directory after you construct the DataFrame. 
+When set to true, the Spark jobs will continue to run when encountering missing files and the contents that have been read will still be returned.
+
+// Modification Time Path Filters
+modifiedBefore and modifiedAfter are options that can be applied together or separately in order to achieve greater granularity over which files may load during a Spark batch query. 
+(Note that Structured Streaming file sources don’t support these options.)
+
+## modifiedBefore: an optional timestamp to only include files with modification times occurring before the specified time. 
+The provided timestamp must be in the following format: YYYY-MM-DDTHH:mm:ss (e.g. 2020-06-01T13:00:00)
+## modifiedAfter: an optional timestamp to only include files with modification times occurring after the specified time. 
+The provided timestamp must be in the following format: YYYY-MM-DDTHH:mm:ss (e.g. 2020-06-01T13:00:00)
+When a timezone option is not provided, the timestamps will be interpreted according to the Spark session timezone (spark.sql.session.timeZone).
+
+To load files with paths matching a given modified time range, you can use:
+df = spark.read.load("examples/src/main/resources/dir1",
+                     format="parquet", modifiedBefore="2050-07-01T08:30:00")
+
+# Only load files modified after 06/01/2050 @ 08:30:00
+df = spark.read.load("examples/src/main/resources/dir1",
+                     format="parquet", modifiedAfter="2050-06-01T08:30:00")
+===============================================================================================================================================================================
+
+
+
 
 
 
